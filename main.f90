@@ -10,24 +10,12 @@ program main
 
     real(PR) :: Temp
     real(PR), dimension(5) :: rho
-    real(PR), dimension(6) :: densite_bois, humidite
-    real(PR), dimension(3) :: A, E, k
+    real(PR), dimension(3) :: k
     character(len=10) :: bois
 
-    !Paramètres annexes
-
-    densite_bois = (/888, 740, 582, 469, 360, 469/)
-    humidite = (/0.149_PR , 0.153_PR, 0.144_PR, 0.141_PR, 0.146_PR, 0.142_PR/) 
-
-    Temp = 700
-    
-    A = (/7.38e5_PR, 1.44e4_PR, 5.13e10_PR/)
-    E = (/106.5e3_PR, 88.6e3_PR, 88e3_PR/)
-
+    Temp = 800
     rho = 0 
-
     k = (/  (A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
-
     tf = 5
     dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
     
@@ -54,7 +42,6 @@ program main
     end do
     close(100)
 
-    !Gnuplot : plot for [i=1:5] "densite.dat" u 6:i w l title sprintf("rho %d",i)
 
     contains
 

@@ -4,5 +4,8 @@ module constantes
 
     integer, parameter :: PR = 8
     real(PR), parameter :: R = 8.3144261_PR
-    
+    real(PR), dimension(6), parameter :: densite_bois = [888, 740, 582, 469, 360, 469]
+    real(PR), dimension(6), parameter :: humidite = [0.149_PR , 0.153_PR, 0.144_PR, 0.141_PR, 0.146_PR, 0.142_PR]
+    real(PR), dimension(3), parameter :: A = [7.38e5_PR, 1.44e4_PR, 5.13e10_PR]
+    real(PR), dimension(3), parameter :: E = [106.5e3_PR, 88.6e3_PR, 88e3_PR]
 end module
