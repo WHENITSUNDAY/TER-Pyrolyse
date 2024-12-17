@@ -5,12 +5,10 @@ program main
     
     implicit none 
 
-    integer, parameter :: PR = 8
-    
     integer :: N, i
     real(PR) :: tf, dt, t
 
-    real(PR) :: T, R, lambda, D
+    real(PR) :: Temp
     real(PR), dimension(5) :: rho
     real(PR), dimension(6) :: densite_bois, humidite
     real(PR), dimension(3) :: A, E, k
@@ -21,25 +19,20 @@ program main
     densite_bois = (/888, 740, 582, 469, 360, 469/)
     humidite = (/0.149_PR , 0.153_PR, 0.144_PR, 0.141_PR, 0.146_PR, 0.142_PR/) 
 
-    T = 700
-    R = 8.3144261_PR
+    Temp = 700
+    
     A = (/7.38e5_PR, 1.44e4_PR, 5.13e10_PR/)
     E = (/106.5e3_PR, 88.6e3_PR, 88e3_PR/)
 
-    
-    
-    !Définiton des paramètres de la pyrolyse
     rho = 0 
 
     k = (/  (A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
-    !k = 0.5
 
-    !Définition des variables de euler explicite
-    tf = 10
+    tf = 5
     dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
     
     print *, dt
-    N = tf/dt
+    N = INT(tf/dt) + 1
     t = 0  
 
     print *, k
@@ -50,18 +43,25 @@ program main
     
     call initialize_rho(rho, bois, densite_bois, humidite)
 
-    open(unit=1,  status="replace", file = "densite.dat")
+    open(unit=100, file = "densite.dat")
 
+    do i = 1, N
 
-    close(1)
+        call RK4_step(rho, k, f, dt)
+        print *, rho
+        write(100,*) rho, dt*(i-1)
+
+    end do
+    close(100)
+
+    !Gnuplot : plot for [i=1:5] "densite.dat" u 6:i w l title sprintf("rho %d",i)
 
     contains
 
 
-        function f(t, rho, k)
+        function f(rho, k)
             real(PR), dimension(:), intent(in) :: rho, k
-            real(PR) :: t
-            real(PR), dimension(5), intent(out) :: f
+            real(PR), dimension(5) :: f
 
             f(1) = -(k(1)+k(2))*rho(1) 
             f(2) = k(1)*rho(1) 
