@@ -8,15 +8,15 @@ module schema
 
         subroutine RK4_step(X, Y, f, dt)
 
-            real(PR), dimension(:), intent(inout) :: X, Y
-            real(PR), intent(in) :: dt
-            real(PR), dimension(5) :: rk1, rk2, rk3, rk4 !Coefficient de Runge Kutta associé au vecteur f
+            real(PR), dimension(:), intent(inout)   :: X, Y
+            real(PR), intent(in)                    :: dt
+            real(PR), dimension(5)                  :: rk1, rk2, rk3, rk4 !Coefficient de Runge Kutta associé au vecteur f
 
             interface
 
                 function f(X, Y)
-                    real(8), dimension(:), intent(in) :: X, Y !Il ne faut pas confondre k d'Arrhenius et les k de RK4, ici on appelle Y les coefficients chimiques
-                    real(8), dimension(5) :: f
+                    real(8), dimension(:), intent(in)   :: X, Y !Il ne faut pas confondre k d'Arrhenius et les k de RK4, ici on appelle Y les coefficients chimiques
+                    real(8), dimension(5)               :: f
                 end function f 
             
             end interface

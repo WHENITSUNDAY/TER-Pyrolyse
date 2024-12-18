@@ -5,44 +5,24 @@ program chimie
     
     implicit none 
 
-    real(PR), dimension(3) :: k
-    real(PR) :: tf, dt, t, Temp
-    real(PR), dimension(5) :: rho
-    integer :: N, i, bois
+    real(PR), dimension(3)  :: k
+    real(PR)                :: t, tf, dt, Temp
+    real(PR), dimension(5)  :: rho
+    integer                 :: type_bois
+ 
+    call read_parameters(t, tf, Temp, type_bois, "parametres.dat")
+    call initialize_rho(rho, type_bois)
+    call initialize_arrhenius(k, Temp)
 
-    Temp = 800
-    k = (/(A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
-    tf = 5
     dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
     
-    print *, dt
-    N = INT(tf/dt) + 1
-    t = 0  
-
-    open(unit=100, file = "parametres.dat", action="read")
-
-    close(100)
-    
-    call initialize_rho(rho, bois)
-
-    open(unit=101, file = "densite.dat")
-
-    do i = 1, N
-
-        call RK4_step(rho, k, f, dt)
-        print *, rho
-        write(101,*) rho, dt*(i-1)
-
-    end do
-    close(101)
-
+    call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
 
     contains
 
-
         function f(rho, k)
-            real(PR), dimension(:), intent(in) :: rho, k
-            real(PR), dimension(5) :: f
+            real(PR), dimension(:), intent(in)  :: rho, k
+            real(PR), dimension(5)              :: f
 
             f(1) = -(k(1)+k(2))*rho(1) 
             f(2) = k(1)*rho(1) 
@@ -52,16 +32,66 @@ program chimie
 
         end function f
 
+        
+        subroutine create_data_RK4(rho, k, t, tf, dt, file_path)
 
-        subroutine initialize_rho(rho, bois, densite_bois, humidite)
+            real(PR), dimension(:), intent(inout)   :: rho, k
+            real(PR), intent(inout)                 :: t, tf, dt
+            character(len=*), intent(in)            :: file_path
+            
+            open(unit=101, file = file_path)
 
-            real(PR), dimension(:) :: rho, densite_bois, humidite
-            integer :: type_bois
+            do while (t < tf)
+
+                write(101,*) t, rho
+                call RK4_step(rho, k, f, dt)
+                t = t + dt
+            
+            end do
+
+            close(101)
+
+        end subroutine create_data_RK4
+
+
+        subroutine read_parameters(t, tf, Temp, type_bois, file_path)
+            real(PR), intent(out)           :: t, tf, Temp
+            integer, intent(out)            :: type_bois 
+            character(len=*), intent(in)    :: file_path
+
+
+            open(unit=100, file=file_path, action="read")
+
+            read(100,*) t
+            read(100,*) tf
+            read(100,*) Temp
+            read(100,*) type_bois
+
+            close(100)
+        
+        end subroutine read_parameters
+
+
+        subroutine initialize_rho(rho, type_bois)
+
+            real(PR), dimension(:), intent(out) :: rho
+            integer, intent(in)                 :: type_bois
 
             rho = 0
             rho(1) = densite_bois(type_bois)*(1-humidite(type_bois))
             rho(4) = densite_bois(type_bois)*humidite(type_bois)
   
         end subroutine initialize_rho
+
+
+        subroutine initialize_arrhenius(k, Temp)
+
+            real(PR), dimension(:), intent(out) :: k
+            real(PR), intent(in)                :: Temp
+            integer                             :: i
+
+            k = (/(A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
+
+        end subroutine initialize_arrhenius
     
 end program chimie
