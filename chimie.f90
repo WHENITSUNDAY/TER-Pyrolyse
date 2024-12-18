@@ -43,7 +43,8 @@ program chimie
 
             do while (t < tf)
 
-                write(101,*) t, rho
+                write(101,*) rho, t
+                print *, rho
                 call RK4_step(rho, k, f, dt)
                 t = t + dt
             
