@@ -1,5 +1,6 @@
 FC=gfortran
-FFLAGS = -O0 -g -Wall -fcheck=all -ffpe-trap=invalid,zero
+#FFLAGS = -O0 -g -Wall -fcheck=all -ffpe-trap=invalid,zero
+FFLAGS = -O3 -march=native
 EXE=run
 
 all :	$(EXE)

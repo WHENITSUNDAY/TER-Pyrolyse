@@ -6,6 +6,33 @@ module schema
 
     contains
 
+        subroutine Heun_step(X, Y, f, dt)
+
+            real(PR), dimension(:), intent(inout)   :: X, Y
+            real(PR), intent(in)                    :: dt
+            real(PR), dimension(5)                  :: P, C
+
+            interface
+
+                function f(X, Y)
+                    real(8), dimension(:), intent(in)   :: X, Y
+                    real(8), dimension(5)               :: f
+                end function f 
+            
+            end interface
+
+            ! Première étape : estimation initiale avec Euler
+            P = X + dt*f(X, Y)
+
+            ! Deuxième étape : estimation avec la correction
+            C = X + dt*f(P, Y)
+
+            ! Mise à jour de X avec la pente moyenne
+            X = (P + C)/2
+
+        end subroutine Heun_step(X, Y, f, dt)
+
+
         subroutine RK4_step(X, Y, f, dt)
 
             real(PR), dimension(:), intent(inout)   :: X, Y

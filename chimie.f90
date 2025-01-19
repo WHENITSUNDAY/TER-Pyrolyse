@@ -15,8 +15,10 @@ program chimie
     call initialize_arrhenius(k, Temp)
 
     dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
+    print *, dt
     
-    call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
+    !call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
+    call create_data_Heun(rho, k, t, tf, dt, "densite_Heun.dat")
 
     contains
 
@@ -32,23 +34,59 @@ program chimie
 
         end function f
 
-        
+
+        subroutine create_data_Heun(rho, k, t, tf, dt, file_path)
+
+            real(PR), dimension(:), intent(inout)   :: rho, k
+            real(PR), intent(inout)                 :: t, tf, dt
+            real(PR)                                :: t1, t2
+            character(len=*), intent(in)            :: file_path
+            integer                                 :: N, i
+            
+            open(unit=101, file = file_path)
+            
+            N = INT(tf/dt)
+            call cpu_time(t1)
+            do i = 1, N
+
+                write(101,*) rho, t
+                !print *, rho
+                call Heun_step(rho, k, f, dt)
+                t = t + dt
+            
+            end do
+
+            call cpu_time(t2)
+            print *, t2 - t1
+
+            close(101)
+
+        end subroutine create_data_Heun
+
         subroutine create_data_RK4(rho, k, t, tf, dt, file_path)
 
             real(PR), dimension(:), intent(inout)   :: rho, k
             real(PR), intent(inout)                 :: t, tf, dt
+            real(PR)                                :: t1, t2
             character(len=*), intent(in)            :: file_path
+            integer                                 :: N, i
             
             open(unit=101, file = file_path)
 
-            do while (t < tf)
+            N = INT(tf/dt)
+            call cpu_time(t1)
+
+            do i = 1, N
 
                 write(101,*) rho, t
-                print *, rho
+                !print *, rho
                 call RK4_step(rho, k, f, dt)
                 t = t + dt
             
             end do
+
+            call cpu_time(t2)
+            print *, t2 - t1
 
             close(101)
 
