@@ -1,8 +1,9 @@
 0           Temps initial (s)           
-10          Temps final (s)                                            
-1000         Température initiale (K)    
+500          Temps final (s)                                            
+600         Température initiale (K)    
 1           Type de bois               
 
 
-Chêne(1) ; Bouleau(2) ; Tremble(3); Epicea(4) ; Pin Blanc(5) ; Meleze(6)
+Type de bois : Chêne(1) ; Bouleau(2) ; Tremble(3); Epicea(4) ; Pin Blanc(5) ; Meleze(6)
+
 

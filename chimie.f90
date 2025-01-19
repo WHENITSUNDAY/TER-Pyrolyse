@@ -10,15 +10,16 @@ program chimie
     real(PR), dimension(5)  :: rho
     integer                 :: type_bois
  
-    call read_parameters(t, tf, Temp, type_bois, "parametres.dat")
+    call read_parameters(t, tf, Temp, type_bois)
     call initialize_rho(rho, type_bois)
     call initialize_arrhenius(k, Temp)
 
     dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
     print *, dt
-    
-    !call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
-    call create_data_Heun(rho, k, t, tf, dt, "densite_Heun.dat")
+
+    !call create_data(rho, k, t, tf, dt, Euler_step, "densite_Euler.dat")
+    call create_data(rho, k, t, tf, dt, Heun_step, "densite_Heun.dat")
+    !call create_data(rho, k, t, tf, dt, RK4_step, "densite_RK4.dat")
 
     contains
 
@@ -35,7 +36,7 @@ program chimie
         end function f
 
 
-        subroutine create_data_Heun(rho, k, t, tf, dt, file_path)
+        subroutine create_data(rho, k, t, tf, dt, schema, file_path)
 
             real(PR), dimension(:), intent(inout)   :: rho, k
             real(PR), intent(inout)                 :: t, tf, dt
@@ -43,15 +44,36 @@ program chimie
             character(len=*), intent(in)            :: file_path
             integer                                 :: N, i
             
+            interface
+
+                subroutine schema(X, Y, f, dt )
+                    real(8), dimension(:), intent(inout)   :: X, Y
+                    real(8), intent(in)                    :: dt
+                    real(8), dimension(5)                  :: P, C
+
+                    interface
+
+                        function f(X, Y)
+                            real(8), dimension(:), intent(in)   :: X, Y
+                            real(8), dimension(5)               :: f
+                        end function f 
+                    
+                    end interface
+
+                end subroutine
+            
+            end interface
+
             open(unit=101, file = file_path)
             
             N = INT(tf/dt)
+            print *, N
             call cpu_time(t1)
             do i = 1, N
 
                 write(101,*) rho, t
                 !print *, rho
-                call Heun_step(rho, k, f, dt)
+                call schema(rho, k, f, dt)
                 t = t + dt
             
             end do
@@ -61,45 +83,15 @@ program chimie
 
             close(101)
 
-        end subroutine create_data_Heun
-
-        subroutine create_data_RK4(rho, k, t, tf, dt, file_path)
-
-            real(PR), dimension(:), intent(inout)   :: rho, k
-            real(PR), intent(inout)                 :: t, tf, dt
-            real(PR)                                :: t1, t2
-            character(len=*), intent(in)            :: file_path
-            integer                                 :: N, i
-            
-            open(unit=101, file = file_path)
-
-            N = INT(tf/dt)
-            call cpu_time(t1)
-
-            do i = 1, N
-
-                write(101,*) rho, t
-                !print *, rho
-                call RK4_step(rho, k, f, dt)
-                t = t + dt
-            
-            end do
-
-            call cpu_time(t2)
-            print *, t2 - t1
-
-            close(101)
-
-        end subroutine create_data_RK4
+        end subroutine create_data
 
 
-        subroutine read_parameters(t, tf, Temp, type_bois, file_path)
+        subroutine read_parameters(t, tf, Temp, type_bois)
             real(PR), intent(out)           :: t, tf, Temp
             integer, intent(out)            :: type_bois 
-            character(len=*), intent(in)    :: file_path
 
 
-            open(unit=100, file=file_path, action="read")
+            open(unit=100, file="parametres.dat", action="read")
 
             read(100,*) t
             read(100,*) tf

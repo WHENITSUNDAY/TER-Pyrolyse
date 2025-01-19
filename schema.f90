@@ -6,6 +6,25 @@ module schema
 
     contains
 
+        subroutine Euler_step(X, Y, f, dt)
+
+            real(PR), dimension(:), intent(inout)   :: X, Y
+            real(PR), intent(in)                    :: dt
+
+            interface
+
+                function f(X, Y)
+                    real(8), dimension(:), intent(in)   :: X, Y
+                    real(8), dimension(5)               :: f
+                end function f 
+            
+            end interface
+
+            X = X + dt*f(X, Y) 
+
+        end subroutine Euler_step
+
+
         subroutine Heun_step(X, Y, f, dt)
 
             real(PR), dimension(:), intent(inout)   :: X, Y
