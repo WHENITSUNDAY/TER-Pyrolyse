@@ -21,16 +21,11 @@ module schema
             
             end interface
 
-            ! Première étape : estimation initiale avec Euler
-            P = X + dt*f(X, Y)
-
-            ! Deuxième étape : estimation avec la correction
-            C = X + dt*f(P, Y)
-
-            ! Mise à jour de X avec la pente moyenne
+            P = X + dt*f(X, Y) !Prédicteur
+            C = X + dt*f(P, Y) !Correcteur
             X = (P + C)/2
 
-        end subroutine Heun_step(X, Y, f, dt)
+        end subroutine Heun_step
 
 
         subroutine RK4_step(X, Y, f, dt)
@@ -42,7 +37,7 @@ module schema
             interface
 
                 function f(X, Y)
-                    real(8), dimension(:), intent(in)   :: X, Y !Il ne faut pas confondre k d'Arrhenius et les k de RK4, ici on appelle Y les coefficients chimiques
+                    real(8), dimension(:), intent(in)   :: X, Y !Il ne faut pas confondre k d'Arrhenius et les k de RK4, ici on appelle Y les coefficients chimiques pour éviter les confusions
                     real(8), dimension(5)               :: f
                 end function f 
             
