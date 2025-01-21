@@ -1,10 +1,6 @@
 0           Temps initial (s)           
-<<<<<<< HEAD
-500          Temps final (s)                                            
-=======
-1000          Temps final (s)                                            
->>>>>>> 73beb1fde9f1fc190369466cf732721abdc60403
-600         Température initiale (K)    
+200          Temps final (s)                                            
+500         Température initiale (K)    
 1           Type de bois               
 
 

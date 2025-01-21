@@ -12,22 +12,14 @@ program chimie
  
     call read_parameters(t, tf, Temp, type_bois)
     call initialize_rho(rho, type_bois)
-    call initialize_arrhenius(k, Temp)
+    call arrhenius(k, Temp)
 
-<<<<<<< HEAD
-    dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
-    print *, dt
-
-    !call create_data(rho, k, t, tf, dt, Euler_step, "densite_Euler.dat")
-    call create_data(rho, k, t, tf, dt, Heun_step, "densite_Heun.dat")
-    !call create_data(rho, k, t, tf, dt, RK4_step, "densite_RK4.dat")
-=======
-    dt = 0.009_PR/(k(1)+k(2))
+    dt = 1 
     print *, "dt :", dt
     print *, "k :", k
-    !call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
-    call create_data_Heun(rho, k, t, tf, dt, "densite_Heun.dat")
->>>>>>> 73beb1fde9f1fc190369466cf732721abdc60403
+
+    call create_data_CK2(rho, k, t, tf, dt, "densite_CK2.dat")
+    !call create_data_Euler(rho, k, t, tf, dt, "densite_Euler.dat")
 
     contains
 
@@ -44,7 +36,7 @@ program chimie
         end function f
 
 
-        subroutine create_data(rho, k, t, tf, dt, schema, file_path)
+        subroutine create_data_CK2(rho, k, t, tf, dt, file_path)
 
             real(PR), dimension(:), intent(inout)   :: rho, k
             real(PR), intent(inout)                 :: t, tf, dt
@@ -52,42 +44,52 @@ program chimie
             real(PR), dimension(3)                  :: k_new
             character(len=*), intent(in)            :: file_path
             integer                                 :: N, i
-            
-            interface
-
-                subroutine schema(X, Y, f, dt )
-                    real(8), dimension(:), intent(inout)   :: X, Y
-                    real(8), intent(in)                    :: dt
-                    real(8), dimension(5)                  :: P, C
-
-                    interface
-
-                        function f(X, Y)
-                            real(8), dimension(:), intent(in)   :: X, Y
-                            real(8), dimension(5)               :: f
-                        end function f 
-                    
-                    end interface
-
-                end subroutine
-            
-            end interface
 
             open(unit=101, file = file_path)
             
-            N = INT(tf/dt)
+            k_new = k
+            N = INT(tf/dt) !Calcul du nb d'opérations
             print *, N
             call cpu_time(t1)
             do i = 1, N
 
-                call initialize_arrhenius(k_new, Temp)
-                write(101,*) rho, t, T
-                !print *, rho
-<<<<<<< HEAD
-                call schema(rho, k, f, dt)
-=======
-                call Heun_step(rho, k, k_new, f, dt)
->>>>>>> 73beb1fde9f1fc190369466cf732721abdc60403
+                Temp = Temp + dt
+                call arrhenius(k_new, Temp)
+                write(101,*) rho, t, Temp
+                print *, rho, t, Temp
+                call CK2_step(rho, k, k_new, dt)
+                t = t + dt
+                k = k_new
+            
+            end do
+
+            call cpu_time(t2)
+            print *, t2 - t1
+
+            close(101)
+
+        end subroutine create_data_CK2
+
+        subroutine create_data_Euler(rho, k, t, tf, dt, file_path)
+
+            real(PR), dimension(:), intent(inout)   :: rho, k
+            real(PR), intent(inout)                 :: t, tf, dt
+            real(PR)                                :: t1, t2
+            character(len=*), intent(in)            :: file_path
+            integer                                 :: N, i
+
+            open(unit=101, file = file_path)
+            
+            N = INT(tf/dt) !Calcul du nb d'opérations
+            print *, N
+            call cpu_time(t1)
+            do i = 1, N
+
+                Temp = Temp + dt
+                call arrhenius(k, Temp)
+                write(101,*) rho, t, Temp
+                print *, rho
+                call Euler_step(rho, k, dt)
                 t = t + dt
             
             end do
@@ -97,7 +99,7 @@ program chimie
 
             close(101)
 
-        end subroutine create_data
+        end subroutine create_data_Euler
 
 
         subroutine read_parameters(t, tf, Temp, type_bois)
@@ -129,7 +131,7 @@ program chimie
         end subroutine initialize_rho
 
 
-        subroutine initialize_arrhenius(k, Temp)
+        subroutine arrhenius(k, Temp)
 
             real(PR), dimension(:), intent(out) :: k
             real(PR), intent(in)                :: Temp
@@ -137,6 +139,6 @@ program chimie
 
             k = (/(A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
 
-        end subroutine initialize_arrhenius
+        end subroutine arrhenius
     
 end program chimie
