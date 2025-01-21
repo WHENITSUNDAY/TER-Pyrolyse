@@ -6,11 +6,11 @@ module schema
 
     contains
 
-        subroutine Heun_step(X, Y, f, dt)
+        subroutine Heun_step(X, k, k_new, f, dt)
 
-            real(PR), dimension(:), intent(inout)   :: X, Y
+            real(PR), dimension(:), intent(inout)   :: X, k, k_new
             real(PR), intent(in)                    :: dt
-            real(PR), dimension(5)                  :: P, C
+            real(PR), dimension(3)                  :: P, C
 
             interface
 
@@ -21,9 +21,12 @@ module schema
             
             end interface
 
-            P = X + dt*f(X, Y) !Prédicteur
-            C = X + dt*f(P, Y) !Correcteur
-            X = (P + C)/2
+            P = X(:3) + dt*f(X(:3), k) !Prédicteur
+            C = X(:3) + dt*f(P, k_new) !Correcteur
+            X(:3) = (P + C)/2
+
+            X(4) = X(4) * ((1-dt/2*(k(3)))/(1+dt/2*k_new(3)))
+            X(5) = X(4) * ((1+dt/2*(k(3)))/(1-dt/2*k_new(3)))
 
         end subroutine Heun_step
 

@@ -14,9 +14,9 @@ program chimie
     call initialize_rho(rho, type_bois)
     call initialize_arrhenius(k, Temp)
 
-    dt = min(0.9_PR/(k(1)+k(2)), 0.9_PR/(k(3)))
-    print *, dt
-    
+    dt = 0.009_PR/(k(1)+k(2))
+    print *, "dt :", dt
+    print *, "k :", k
     !call create_data_RK4(rho, k, t, tf, dt, "densite_RK4.dat")
     call create_data_Heun(rho, k, t, tf, dt, "densite_Heun.dat")
 
@@ -40,6 +40,7 @@ program chimie
             real(PR), dimension(:), intent(inout)   :: rho, k
             real(PR), intent(inout)                 :: t, tf, dt
             real(PR)                                :: t1, t2
+            real(PR), dimension(3)                  :: k_new
             character(len=*), intent(in)            :: file_path
             integer                                 :: N, i
             
@@ -49,9 +50,10 @@ program chimie
             call cpu_time(t1)
             do i = 1, N
 
-                write(101,*) rho, t
+                call initialize_arrhenius(k_new, Temp)
+                write(101,*) rho, t, T
                 !print *, rho
-                call Heun_step(rho, k, f, dt)
+                call Heun_step(rho, k, k_new, f, dt)
                 t = t + dt
             
             end do
