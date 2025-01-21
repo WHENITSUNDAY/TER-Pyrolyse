@@ -6,77 +6,36 @@ module schema
 
     contains
 
-<<<<<<< HEAD
-        subroutine Euler_step(X, Y, f, dt)
+        subroutine Euler_step(rho, k_new, dt)
 
-            real(PR), dimension(:), intent(inout)   :: X, Y
+            real(PR), dimension(:), intent(inout)   :: rho, k_new
             real(PR), intent(in)                    :: dt
 
-            interface
 
-                function f(X, Y)
-                    real(8), dimension(:), intent(in)   :: X, Y
-                    real(8), dimension(5)               :: f
-                end function f 
-            
-            end interface
-
-            X = X + dt*f(X, Y) 
+            rho(1) = rho(1)/(1 + dt * (k_new(1) + k_new(2)))
+            rho(2) = rho(2) + dt * k_new(1) * rho(1)
+            rho(3) = rho(3) + dt * k_new(2) * rho(1)
+            rho(4) = rho(4)/(1 + dt * k_new(3))
+            rho(5) = rho(5) + dt * k_new(3) * rho(4)
 
         end subroutine Euler_step
 
 
-        subroutine Heun_step(X, Y, f, dt)
-=======
-        subroutine Heun_step(X, k, k_new, f, dt)
->>>>>>> 73beb1fde9f1fc190369466cf732721abdc60403
+        subroutine CK2_step(rho, k, k_new, dt)
 
-            real(PR), dimension(:), intent(inout)   :: X, k, k_new
+            real(PR), dimension(:), intent(inout)   :: rho, k, k_new
             real(PR), intent(in)                    :: dt
-            real(PR), dimension(3)                  :: P, C
-
-            interface
-
-                function f(X, Y)
-                    real(8), dimension(:), intent(in)   :: X, Y
-                    real(8), dimension(5)               :: f
-                end function f 
-            
-            end interface
-
-            P = X(:3) + dt*f(X(:3), k) !Prédicteur
-            C = X(:3) + dt*f(P, k_new) !Correcteur
-            X(:3) = (P + C)/2
-
-            X(4) = X(4) * ((1-dt/2*(k(3)))/(1+dt/2*k_new(3)))
-            X(5) = X(4) * ((1+dt/2*(k(3)))/(1-dt/2*k_new(3)))
-
-        end subroutine Heun_step
+            real(PR)                                :: rhob, rhol
 
 
-        subroutine RK4_step(X, Y, f, dt)
+            rhob = rho(1)
+            rhol = rho(4)
+            rho(1) = rho(1) * ((2 - dt * (k(1) + k(2)))/(2 + dt*(k_new(1) + k_new(2))))
+            rho(2) = rho(2) + dt/2 * (k_new(1) * rho(1) + k(1) * rhob)
+            rho(3) = rho(3) + dt/2 * (k_new(2) * rho(1) + k(2) * rhob)
+            rho(4) = rho(4) * ((2 - dt * k(3)/(2 + dt* k_new(3))))
+            rho(5) = rho(5) + dt/2 * (k_new(3) * rho(4) + k(3) * rhol)
 
-            real(PR), dimension(:), intent(inout)   :: X, Y
-            real(PR), intent(in)                    :: dt
-            real(PR), dimension(5)                  :: rk1, rk2, rk3, rk4 !Coefficient de Runge Kutta associé au vecteur f
-
-            interface
-
-                function f(X, Y)
-                    real(8), dimension(:), intent(in)   :: X, Y !Il ne faut pas confondre k d'Arrhenius et les k de RK4, ici on appelle Y les coefficients chimiques pour éviter les confusions
-                    real(8), dimension(5)               :: f
-                end function f 
-            
-            end interface
-
-            rk1 = f(X, Y)
-            rk2 = f(X + dt*rk1/2, Y)
-            rk3 = f(X + dt*rk2/2, Y)
-            rk4 = f(X + dt*rk3, Y)
-
-            X = X + dt*(rk1 + 2 * rk2 + 2 * rk3 + rk4)/6
-
-        end subroutine RK4_step
-
+        end subroutine CK2_step
 
 end module schema
