@@ -6,34 +6,56 @@ program chimie
     implicit none 
 
     real(PR), dimension(3)  :: k
-    real(PR)                :: t, tf, dt, Temp
+    real(PR)                :: t, tf, dt, Temp, Tempf
     real(PR), dimension(5)  :: rho
     integer                 :: type_bois
  
-    call read_parameters(t, tf, Temp, type_bois)
+    call read_parameters(t, tf, Temp, Tempf, type_bois)
     call initialize_rho(rho, type_bois)
     call arrhenius(k, Temp)
 
-    dt = 1 
+    dt = 0.1 
     print *, "dt :", dt
     print *, "k :", k
 
-    call create_data_CK2(rho, k, t, tf, dt, "densite_CK2.dat")
-    !call create_data_Euler(rho, k, t, tf, dt, "densite_Euler.dat")
+    !call create_data_CK2(rho, k, t, tf, dt, "densite_CK2.dat")
+    call create_data_Euler(rho, k, t, tf, dt, Temp, Tempf)
 
     contains
 
-        function f(rho, k)
-            real(PR), dimension(:), intent(in)  :: rho, k
-            real(PR), dimension(5)              :: f
+        subroutine create_data_Euler(rho, k, t, tf, dt, Temp, Tempf)
 
-            f(1) = -(k(1)+k(2))*rho(1) 
-            f(2) = k(1)*rho(1) 
-            f(3) = k(2)*rho(1) 
-            f(4) = -k(3)*rho(4) 
-            f(5) = k(3)*rho(4) 
+            real(PR), dimension(:), intent(inout)   :: rho, k
+            real(PR), intent(inout)                 :: t, tf, dt, Temp, Tempf
+            real(PR)                                :: t1, t2
+            integer                                 :: N, i
+            real(PR)                                :: alpha
 
-        end function f
+            open(unit=101, file = "densite_Euler.dat")
+            
+            N = INT(tf/dt) !Calcul du nb d'opérations
+
+            alpha = (Tempf-Temp)/tf !Le coefficient directeur de T(t)
+
+            call cpu_time(t1)
+            do i = 1, N
+
+                write(101,*) rho, t, Temp
+                print *, rho, t, Temp
+
+                Temp = Temp + dt*alpha
+                call arrhenius(k, Temp)
+                call Euler_step(rho, k, dt)
+                t = t + dt
+            
+            end do
+
+            call cpu_time(t2)
+            print *, t2 - t1
+
+            close(101)
+
+        end subroutine create_data_Euler
 
 
         subroutine create_data_CK2(rho, k, t, tf, dt, file_path)
@@ -70,40 +92,10 @@ program chimie
 
         end subroutine create_data_CK2
 
-        subroutine create_data_Euler(rho, k, t, tf, dt, file_path)
-
-            real(PR), dimension(:), intent(inout)   :: rho, k
-            real(PR), intent(inout)                 :: t, tf, dt
-            real(PR)                                :: t1, t2
-            character(len=*), intent(in)            :: file_path
-            integer                                 :: N, i
-
-            open(unit=101, file = file_path)
-            
-            N = INT(tf/dt) !Calcul du nb d'opérations
-            print *, N
-            call cpu_time(t1)
-            do i = 1, N
-
-                Temp = Temp + dt
-                call arrhenius(k, Temp)
-                write(101,*) rho, t, Temp
-                print *, rho
-                call Euler_step(rho, k, dt)
-                t = t + dt
-            
-            end do
-
-            call cpu_time(t2)
-            print *, t2 - t1
-
-            close(101)
-
-        end subroutine create_data_Euler
 
 
-        subroutine read_parameters(t, tf, Temp, type_bois)
-            real(PR), intent(out)           :: t, tf, Temp
+        subroutine read_parameters(t, tf, Temp, Tempf, type_bois)
+            real(PR), intent(out)           :: t, tf, Temp, Tempf
             integer, intent(out)            :: type_bois 
 
 
@@ -112,6 +104,7 @@ program chimie
             read(100,*) t
             read(100,*) tf
             read(100,*) Temp
+            read(100,*) Tempf
             read(100,*) type_bois
 
             close(100)
