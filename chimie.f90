@@ -14,12 +14,12 @@ program chimie
     call initialize_rho(rho, type_bois)
     call arrhenius(k, Temp)
 
-    dt = 0.1 
+    dt = 0.1
     print *, "dt :", dt
     print *, "k :", k
 
-    !call create_data_CK2(rho, k, t, tf, dt, "densite_CK2.dat")
-    call create_data_Euler(rho, k, t, tf, dt, Temp, Tempf)
+    call create_data_CK2(rho, k, t, tf, dt, Temp, Tempf)
+    !call create_data_Euler(rho, k, t, tf, dt, Temp, Tempf)
 
     contains
 
@@ -43,6 +43,7 @@ program chimie
                 write(101,*) rho, t, Temp
                 print *, rho, t, Temp
 
+                
                 Temp = Temp + dt*alpha
                 call arrhenius(k, Temp)
                 call Euler_step(rho, k, dt)
@@ -58,27 +59,34 @@ program chimie
         end subroutine create_data_Euler
 
 
-        subroutine create_data_CK2(rho, k, t, tf, dt, file_path)
+        subroutine create_data_CK2(rho, k, t, tf, dt, Temp, Tempf)
 
             real(PR), dimension(:), intent(inout)   :: rho, k
-            real(PR), intent(inout)                 :: t, tf, dt
+            real(PR), intent(inout)                 :: t, tf, dt, Temp, Tempf
             real(PR)                                :: t1, t2
-            real(PR), dimension(3)                  :: k_new
-            character(len=*), intent(in)            :: file_path
+            real(PR), dimension(3)                  :: k_new, k_moy
             integer                                 :: N, i
+            real(PR)                                :: alpha
 
-            open(unit=101, file = file_path)
+            open(unit=101, file = "densite_CK2.dat")
             
-            k_new = k
             N = INT(tf/dt) !Calcul du nb d'opérations
-            print *, N
+
+            alpha = (Tempf-Temp)/tf !Le coefficient directeur de T(t)
+
+            k_new = k
             call cpu_time(t1)
             do i = 1, N
 
-                Temp = Temp + dt
-                call arrhenius(k_new, Temp)
+                print *, "k", k
+                print *, "k_new", k_new
+
                 write(101,*) rho, t, Temp
-                print *, rho, t, Temp
+                !print *, rho, t, Temp
+                call arrhenius(k_new, Temp)
+                
+                Temp = Temp + dt*alpha
+
                 call CK2_step(rho, k, k_new, dt)
                 t = t + dt
                 k = k_new
