@@ -2,7 +2,8 @@
 300          Temps final (s)                                            
 300         Température initiale (K)   
 1000        Température finale (K) 
-1           Type de bois               
+1           Type de bois
+               
 
 
 Type de bois : Chêne(1) ; Bouleau(2) ; Tremble(3); Epicea(4) ; Pin Blanc(5) ; Meleze(6)

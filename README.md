@@ -1,6 +1,6 @@
 # TER-Pyrolyse
 
-Gnuplot : 
+# Gnuplot : 
 
 set xlabel "Temps (s)"
 set xtics nomirror

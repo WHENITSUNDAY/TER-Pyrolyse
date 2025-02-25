@@ -1,4 +1,4 @@
-module schema
+module mod_schema
     
     use constantes
 
@@ -39,4 +39,4 @@ module schema
 
         end subroutine CK2_step
 
-end module schema
+end module mod_schema
