@@ -1,6 +1,6 @@
 module mod_algebre
     
-    use constantes
+    use mod_constantes
     
     implicit none
 
@@ -68,7 +68,7 @@ module mod_algebre
         end subroutine lu_decomp
 
 
-        subroutine lu_res(M, b, x, check)
+        subroutine lu_res(M, b, x)
             real(PR), dimension(:,:), intent(in)    :: M
             real(PR), dimension(:), intent(in)      :: b
             real(PR), dimension(:), intent(out)     :: x
@@ -95,6 +95,7 @@ module mod_algebre
             end do
 
         end subroutine lu_res
+        
         
         subroutine chol_decomp(A, L)
             real(PR), dimension(:,:), intent(in)        :: A

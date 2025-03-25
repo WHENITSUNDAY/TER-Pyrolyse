@@ -18,10 +18,10 @@ program chimie
     print *, "dt :", dt
     print *, "k :", k
 
-    !call create_data_CK2(rho, k, t, tf, dt, Temp, Tempf)
+    ! call create_data_CK2(rho, k, t, tf, dt, Temp, Tempf)
     ! call create_data_Euler(rho, k, t, tf, dt, Temp, Tempf)
     ! call error_Euler(rho, k, t, tf, dt, Temp, Tempf)
-    call error_CK2(rho, k, t, tf, dt, Temp, Tempf)
+    ! call error_CK2(rho, k, t, tf, dt, Temp, Tempf)
 
     contains
 

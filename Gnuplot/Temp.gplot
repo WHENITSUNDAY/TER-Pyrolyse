@@ -1,0 +1,30 @@
+set xlabel "Temps (s)"
+set xtics nomirror
+set xrange [0:300] #200 ici est le temps final d'étude
+
+set ylabel "Masse volumique (kg.m-3)"
+set yrange [0:950]
+
+set x2label "Temperature (K)"
+set x2tics nomirror
+set x2range [300:1000] #300 et 1000 correspondent ici à la température initiale et finale respectivement
+
+set key outside right top font ",12
+set grid x y
+
+set terminal pdf font 'Helvetica,12'
+set output "temperature_t.pdf"
+
+plot "data_temp/temperature_t0.dat" u 1:2 w l title "{/Symbol r}_{b}", \
+     "data_temp/temperature_t100.dat" u 1:2 w l title "{/Symbol r}_{c}", \
+     "data_temp/temperature_t200.dat" u 1:2 w l title "{/Symbol r}_{g}", \
+     "data_temp/temperature_t300.dat" u 1:2 w l title "{/Symbol r}_{l}", \
+     "data_temp/temperature_t400.dat" u 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t500.dat" u 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t600.dat" u 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t700.dat" u 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t800.dat" u 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t900.dat" 1:2 w l title "{/Symbol r}_{v}", \
+     "data_temp/temperature_t1000.dat" 1:2 w l title "{/Symbol r}_{v}", \
+
+#pause -1 "Press any key"
