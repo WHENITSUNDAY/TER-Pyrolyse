@@ -9,7 +9,7 @@ program couplage
     real(PR), dimension(3)  :: k, k_new
     real(PR)                :: t, t0, tf, dt, dx, T_0, T_init, T_Nx, khi, mv_bois, lambda_phalf, lambda_mhalf, eta, L
     real(PR), dimension(:), allocatable :: T_new, T_n, rho_b, rho_c, rho_g, rho_l, rho_v, rhoCp, lambda
-    integer                 :: type_bois, Nx, Nt, n, i
+    integer                 :: type_bois, Nx, Nt, n, i, counter
     character(len=20)           :: nc
     
     
@@ -39,7 +39,7 @@ program couplage
     rho_l = mv_bois*khi
     rho_v = 0._PR
 
-    Nt = 1000
+    Nt = 2000
     dt = (tf-t0)/Nt
 
     T_n = T_init
@@ -49,15 +49,22 @@ program couplage
     T_new(0) = T_0
     T_new(Nx) = T_Nx
 
+    counter = 0
+
     do n = 0, Nt
 
         print *, t, T_new(5)
         
 
         if ( mod(n, 100) == 0) then
+
+    
                 
-            write(nc,*) n
+            write(nc,*) counter
             open(unit = 100, file='data_temp/temperature_t'//trim(adjustl(nc))//'.dat')
+            open(unit = 101, file='data_temp/rho_t'//trim(adjustl(nc))//'.dat')
+
+            counter = counter +1
         
         end if
         
@@ -93,6 +100,8 @@ program couplage
             call arrhenius(k, T_n(i))
             call arrhenius(k_new, T_new(i))
             call CK2_step(rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i), k, k_new, dt)
+
+            write(101,*), dx*i, rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i)
 
         end do
 
