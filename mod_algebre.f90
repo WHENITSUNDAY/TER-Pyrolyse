@@ -6,33 +6,42 @@ module mod_algebre
 
     contains 
 
-        function A_n(n, dx)
+        subroutine remplissage_A(A, Nx, lambda, rhoCp, dx, dt)
+            real(PR), dimension(0:Nx+1) :: lambda, rhoCp
+            real(PR), dimension(1:Nx, 1:Nx) :: A
+            real(PR) :: lambda_ph, lambda_mh, alpha, dx, dt
+            integer :: i, Nx
 
-            integer                         :: n, i
-            real(PR)                        :: dx
-            real(PR), dimension(n,n)        :: A_n
+            A = 0.0_PR
 
-            A_n = 0._PR
+            lambda_mh = 2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0))
 
-            do i = 1, n
+            do i = 1, Nx
+                lambda_ph = 2.0_PR * lambda(i) * lambda(i+1) / (lambda(i) + lambda(i+1))
 
-                A_n(i,i) = -2._PR
+                alpha = dt/(rhoCp(i) * dx**2)
 
-                if (i > 1) then
-                    
-                    A_n(i-1, i) = 1._PR
+                if (i == 1) then
+
+                    A(i, i) = -alpha * (lambda_mh + lambda_ph)
+                    A(i, i+1) = alpha * lambda_ph
+
+                else if (i == Nx) then
+
+                    A(i, i) = alpha * lambda_mh
+                    A(i, i-1) = alpha * lambda_mh
+
+                else
+                    A(i, i) = -alpha * (lambda_ph + lambda_mh)
+                    A(i, i+1) = alpha * lambda_ph
+                    A(i, i-1) = alpha * lambda_mh
                 end if
 
-                if (i < n) then
-                    
-                    A_n(i+1, i) = 1._PR
-                end if
+                lambda_mh = lambda_ph
+                
             end do
-
-            A_n = A_n * (-1._PR/(dx**2))
-                    
-        end function A_n
         
+        end subroutine remplissage_A
 
         subroutine print_mat(A)
             
@@ -52,7 +61,6 @@ module mod_algebre
             real(PR), dimension(:,:), intent(in)        :: A
             real(PR), dimension(:,:), intent(inout)     :: M
             integer                                     :: n, j, k
-            real(PR)                                    :: s_1, s_2
 
             n = size(A,1)
 
@@ -73,7 +81,6 @@ module mod_algebre
             real(PR), dimension(:), intent(in)      :: b
             real(PR), dimension(:), intent(out)     :: x
             real(PR), dimension(size(x))            :: y
-            real(PR)                                :: s
             integer                                 :: i, j, n
 
             n = size(A,1)
@@ -97,75 +104,5 @@ module mod_algebre
         end subroutine lu_res
         
         
-        subroutine chol_decomp(A, L)
-            real(PR), dimension(:,:), intent(in)        :: A
-            real(PR), dimension(:,:), intent(inout)     :: L
-            integer                                     :: n, i, j, k
-            real(PR)                                    :: s_1, s_2
-
-            
-            n = size(A,1)
-            L = 0._PR
-
-            do i = 1, n
-                s_1 = 0._PR
-
-                do k = 1, i-1
-                    s_1 = s_1 + L(i,k)**2
-                end do
-
-                L(i,i) = SQRT(A(i,i) - s_1)
-
-                do j = i+1, n
-                    s_2 = 0._PR
-
-                    do k = 1, i-1
-                        s_2 = s_2 + L(i,k)*L(j,k)
-                    end do
-
-                    L(j,i) = (A(j,i) - s_2)/L(i,i)
-
-                end do
-            end do
-        
-        end subroutine chol_decomp
-
-
-        subroutine chol_res(L, b, x)
-            real(PR), dimension(:,:), intent(in)        :: L
-            real(PR), dimension(:), intent(in)          :: b
-            real(PR), dimension(:), intent(out)         :: x
-            real(PR), dimension(size(x))                :: y
-            real(PR), dimension(size(L,1),size(L,2))    :: Lt
-            real(PR)                                    :: s_3, s_4
-            integer                                     :: i, j, n
-        
-            n = size(L, 1)
-            Lt = TRANSPOSE(L)
-
-            y = 0.0_PR
-
-            do i = 1, n
-                s_3 = 0.0_PR
-
-                do j = 1, i-1
-                    s_3 = s_3 + L(i,j) * y(j)
-                end do
-
-                y(i) = (b(i) - s_3) / L(i,i)
-            end do
-
-            do i = n, 1, -1
-                s_4 = 0.0_PR
-
-                do j = i+1, n
-                    s_4 = s_4 + Lt(i,j) * x(j)
-                end do
-
-                x(i) = (y(i) - s_4) / Lt(i,i)
-
-            end do
-        
-        end subroutine chol_res
 
 end module mod_algebre

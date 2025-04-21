@@ -41,4 +41,14 @@ module mod_schema
 
         end subroutine CK2_step
 
+        subroutine arrhenius(k, Temp)
+
+            real(PR), dimension(:), intent(out) :: k
+            real(PR), intent(in)                :: Temp
+            integer                             :: i
+
+            k = (/(A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
+
+        end subroutine arrhenius
+        
 end module mod_schema
