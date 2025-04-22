@@ -1,23 +1,27 @@
 FC=gfortran
 FFLAGS = -O0 -g -Wall -fcheck=all -ffpe-trap=invalid,zero
 #FFLAGS = -O3 -march=native
+
 EXE=run
 
 all :	$(EXE)
 
-$(EXE) :	mod_constantes.o mod_algebre.o mod_schema.o couplage.o
-	$(FC) -o $(EXE) mod_constantes.o mod_algebre.o mod_schema.o couplage.o
+$(EXE) :	mod_param.o mod_algebre.o mod_fonctions.o mod_schemas.o couplage.o
+	$(FC) $(FFLAGS) -o $(EXE) mod_param.o mod_algebre.o mod_fonctions.o mod_schemas.o couplage.o
 
-mod_constantes.o :	mod_constantes.f90
-	$(FC) $(FFLAGS) -c mod_constantes.f90
-
-mod_algebre.o :	mod_algebre.f90 mod_constantes.o
+mod_param.o : mod_param.f90
+	$(FC) $(FFLAGS) -c mod_param.f90
+	
+mod_algebre.o :	mod_algebre.f90 mod_param.o 
 	$(FC) $(FFLAGS) -c mod_algebre.f90
 
-mod_schema.o :	mod_schema.f90 mod_algebre.o mod_constantes.o
-	$(FC) $(FFLAGS) -c mod_schema.f90
+mod_fonctions.o : mod_fonctions.f90 mod_param.o
+	$(FC) $(FFLAGS) -c mod_fonctions.f90
 
-couplage.o :	couplage.f90  mod_constantes.o mod_algebre.o mod_schema.o
+mod_schemas.o : mod_schemas.f90 mod_param.o mod_algebre.o mod_fonctions.o
+	$(FC) $(FFLAGS) -c mod_schemas.f90
+
+couplage.o :	couplage.f90 mod_param.o mod_algebre.o mod_fonctions.o mod_schemas.o
 	$(FC) $(FFLAGS) -c couplage.f90
 
 clean :

@@ -1,4 +1,4 @@
-module mod_constantes
+module mod_param
 
     implicit none
 
@@ -9,5 +9,5 @@ module mod_constantes
     real(PR), dimension(3), parameter   :: A = [7.38e5_PR, 1.44e4_PR, 5.13e10_PR] !Paramètres Arrhenius
     real(PR), dimension(3), parameter   :: E = [106.5e3_PR, 88.6e3_PR, 88e3_PR] !Paramètres Arrhenius
     real(PR), dimension(5), parameter   :: Cp = [1.95_PR, 1.39_PR, 2.4_PR, 4.18_PR, 1.58_PR]
-
-end module mod_constantes
+    
+end module mod_param

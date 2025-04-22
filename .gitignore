@@ -1,4 +1,6 @@
-data/
+data_temp/
 *.o
 *.mod
 run
+graphe/
+data/
