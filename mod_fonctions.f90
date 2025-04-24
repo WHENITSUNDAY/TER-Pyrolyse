@@ -34,15 +34,15 @@ module mod_fonctions
                 
                 case (1)
 
-                    Tg = 800._PR
+                    Tg = 500._PR
 
                 case (2)
 
-                    Tg = 0._PR
+                    Tg = 500._PR
                 
                 case (3)
 
-                    Tg = 0._PR
+                    Tg = 500._PR
             end select
 
         end function Tg
@@ -53,7 +53,7 @@ module mod_fonctions
             real(PR), intent(in)                :: Temp
             integer                             :: i
 
-            k = (/(A(i)*exp(-E(i)/(R*Temp)), i = 1, 3)/)
+            k = (/(A_arr(i)*exp(-E_arr(i)/(R*Temp)), i = 1, 3)/)
 
         end subroutine arrhenius
 

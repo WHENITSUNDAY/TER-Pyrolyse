@@ -32,7 +32,7 @@ module mod_algebre
                     A(i, i-1) = alpha * lambda_mh
 
                 else
-                    A(i, i) = 1._PR -alpha * (lambda_ph + lambda_mh)
+                    A(i, i) = 1._PR - alpha * (lambda_ph + lambda_mh)
                     A(i, i+1) = alpha * lambda_ph
                     A(i, i-1) = alpha * lambda_mh
                 end if
@@ -155,26 +155,26 @@ module mod_algebre
             real(PR), dimension(n-1) :: l, u
             integer :: i
 
-            d(1) = A(1, 1)
-            do i = 2, n
-                l(i-1) = A(i, i-1) / d(i-1)
-                d(i) = A(i, i) - l(i-1) * A(i-1, i)
+            do i = 1, n
+                d(i) = A(i, i)
             end do
 
-            do i = 1, n-1
+            do i = 1, n - 1
                 u(i) = A(i, i+1)
+                l(i) = A(i+1, i) / d(i)
+                d(i+1) = d(i+1) - l(i) * u(i)
             end do
 
-            y(1) = b(1) / d(1)
+            y(1) = b(1)
             do i = 2, n
-                y(i) = (b(i) - l(i-1) * y(i-1)) / d(i)
+                y(i) = b(i) - l(i-1) * y(i-1)
             end do
-        
+
             x(n) = y(n) / d(n)
             do i = n-1, 1, -1
                 x(i) = (y(i) - u(i) * x(i+1)) / d(i)
             end do
-        
+
         end subroutine lu_tridiagonal
 
 

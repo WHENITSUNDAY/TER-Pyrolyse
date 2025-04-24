@@ -34,7 +34,6 @@ module mod_schemas
 
             rho_b_old = rho_b
             rho_l_old = rho_l
-
             rho_b = rho_b * ((1._PR - dt/2._PR * (k(1) + k(2)))/(1._PR + dt/2._PR *(k_new(1) + k_new(2))))
             rho_c = rho_c + dt/2._PR * (k_new(1) * rho_b + k(1) * rho_b_old)
             rho_g = rho_g + dt/2._PR * (k_new(2) * rho_b + k(2) * rho_b_old)
@@ -44,6 +43,7 @@ module mod_schemas
         end subroutine CK2_step
 
         subroutine save_temp(schema, ci, cl, L, imax, tmax, type_bois, cfl, freq)
+
             integer, intent(in)             :: imax, type_bois, freq, schema, ci, cl 
             real(PR), intent(in)            :: cfl, tmax, L
             real(PR), dimension(0:imax+1)   :: T, Tnew , rho_b, rho_c, rho_g, rho_l, rho_v, rhoCp, lambda
@@ -69,7 +69,7 @@ module mod_schemas
             write(chl,'(1F4.0)') L
             write(chbois,*) type_bois 
             write(chimax,'(1I4)') imax
-            write(chcfl,'(1F5.3)') cfl
+            write(chcfl,'(1F6.2)') cfl
 
 
 
@@ -86,7 +86,7 @@ module mod_schemas
 
             tn = 0._PR
             ct = 1
-            dx = 1._PR/(imax+1)
+            dx = L/(imax+1)
             
             !Calcul CFL
             lambda0 = (0.166_PR + 0.369_PR * khi) 
@@ -142,41 +142,36 @@ module mod_schemas
                     case (2) !Euler Implicite
                         
                         call remplissage_A(A, imax, lambda, -1._PR, rhoCp, dx, dt)
+                        T(0) = Tg(tn, cl)
+                        Tnew(0) = Tg(tn, cl)
 
-                        T(0) = Tg(tn, CL)
                         T(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
-
-                        print *, tn, T(1)
                         call lu_tridiagonal(imax, A, T(1:imax), Tnew(1:imax))
-                        
+                        print *, Tnew(0), Tnew(1)
                         Tnew(imax+1) = Tnew(imax)
+
                     case (3) !Crank-Nicolson
 
-                        T(0) = Tg(tn, CL)
-                        print *, dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
+                        T(0) = Tg(tn, cl)
                         T(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
 
-                        print *, T(1)
                         call remplissage_A(A1, imax, lambda, -1._PR, rhoCp, dx, dt)
                         call remplissage_A(A2, imax, lambda, 1._PR, rhoCp, dx, dt)
-
                         call lu_tridiagonal(imax, A1, MATMUL(A2,T(1:imax)), Tnew(1:imax))
+
                 end select 
 
                 do i = 0, imax+1
 
                     call arrhenius(k, T(i))
+                    !print *, k, T(i)
                     call arrhenius(knew, Tnew(i))
+                    !print *, knew, Tnew(i)
                     call CK2_step(rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i), k, knew, dt)
-
-                    
-
                     if ( mod(ct, freq) == 0) then
 
                         write(100,*) dx*i, Tnew(i), rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i)
-
                     end if
-
                     
                 end do
 
@@ -190,6 +185,7 @@ module mod_schemas
 
                 end if
             end do 
+
         end subroutine save_temp
 
 end module mod_schemas

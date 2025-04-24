@@ -7,8 +7,8 @@ program couplage
 
 
     implicit none
- 
-    call save_temp(schema=2, ci=1, cl=1, L=0.10_PR, imax=64, tmax=500._PR, type_bois=1, cfl=1._PR, freq=20)
+
+    call save_temp(schema=2, ci=1, cl=1, L=0.1_PR, imax=64, tmax=500._PR, type_bois=1, cfl=10._PR, freq=5)
 
 
 end program couplage
