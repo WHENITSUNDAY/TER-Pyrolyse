@@ -46,15 +46,18 @@ module mod_schemas
 
             integer, intent(in)             :: imax, type_bois, freq, schema, ci, cl 
             real(PR), intent(in)            :: cfl, tmax, L
-            real(PR), dimension(0:imax+1)   :: T, Tnew , rho_b, rho_c, rho_g, rho_l, rho_v, rhoCp, lambda
+            real(PR), dimension(0:imax+1)   :: T, Tnew , rho_b, rho_c, rho_g, rho_l, rho_v, rhoCp, lambda, Qr
             real(PR), dimension(imax, imax) :: A, A1, A2
-            real(PR), dimension(3)          :: k, knew
-            real(PR)                        :: tn, dt, dx, eta, khi, mv_bois, xi, rhoCp0, lambda0
+            real(PR), dimension(imax)       :: b
+            real(PR), dimension(3, 0:imax+1) :: k, knew
+            real(PR)                        :: tn, dt, dx, eta, khi, mv_bois, xi, rhoCp0, lambda0, t1, t2
             integer                         :: i, ct
             character(20)                   :: chci, chcl, chl, chbois, chtn, chimax, chcfl, chschema
             character(len=200)              :: fichier
 
             
+            call cpu_time(t1)
+
             select case (schema)
                 case (1)
                     write(chschema,*) 'EE'
@@ -64,12 +67,12 @@ module mod_schemas
                     write(chschema,*) 'CK'
             end select
 
-            write(chci,'(1I1)') ci
-            write(chcl,'(1I1)') cl
-            write(chl,'(1F4.0)') L
+            !write(chci,'(1I1)') ci
+            !write(chcl,'(1I1)') cl
+            write(chl,'(1F4.1)') L
             write(chbois,*) type_bois 
             write(chimax,'(1I4)') imax
-            write(chcfl,'(1F6.2)') cfl
+            !write(chcfl,'(1F6.2)') cfl
 
 
 
@@ -81,21 +84,33 @@ module mod_schemas
             rho_g = 0._PR
             rho_l = mv_bois*khi
             rho_v = 0._PR
+
             
             !Initialisation Schéma
-
             tn = 0._PR
-            ct = 1
+            ct = 0
             dx = L/(imax+1)
             
-            !Calcul CFL
-            lambda0 = (0.166_PR + 0.369_PR * khi) 
-            rhoCp0 = rho_b(0)*Cp(1) + rho_l(0)*Cp(4)   
-            dt = cfl * rhoCp0 * dx**2 / (2*lambda0)
+            !Calcul dt
+            select case (schema)
 
-            print *, dt
+                case (1)
+
+                    lambda0 = (0.166_PR + 0.369_PR * khi) 
+                    rhoCp0 = rho_b(0)*Cp(1) + rho_l(0)*Cp(4)   
+                    dt = cfl * rhoCp0 * dx**2 / (2*lambda0)
+
+                case (2)
+                    dt = cfl/tmax !Schema implicite : pas de condition CFL
+                    
+                case(3)
+                    dt = cfl/tmax
+            
+            end select
+
+            print *, "Pas de temps :", dt
+
             !Initialisation Température
-
             T(0) = Tg(0._PR, cl)
             Tnew(0) = Tg(0._PR, cl)
 
@@ -103,9 +118,13 @@ module mod_schemas
                 xi = i*dx
                 T(i) = Tinit(xi, ci)
                 Tnew(i) = Tinit(xi, ci)
+                
             end do
 
-            print *, T
+            do i = 0, imax+1
+                call arrhenius(k(:,i), T(i))
+            end do
+
             do while (tn < tmax)
 
                 if ( mod(ct, freq) == 0) then
@@ -113,13 +132,11 @@ module mod_schemas
                     write(chtn,'(1F6.1)') tn
 
                     fichier = 'data/temp_'//trim(adjustl(chschema)) // &
-                        & '_ci'// trim(adjustl(chci)) &
-                        & // '_cl' // trim(adjustl(chcl)) &
-                        & // '_L'// trim(adjustl(chl)) &
+                        & '_L'// trim(adjustl(chl)) &
                         & // '_bois'// trim(adjustl(chbois)) &
                         & // '_tn' // trim(adjustl(chtn)) &
-                        & // '_imax' // trim(adjustl(chimax)) &
-                        & // '_cfl' // trim(adjustl(chcfl)) //'.dat'
+                        & // '_imax' // trim(adjustl(chimax)) //'.dat' !&
+                        !& // '_cfl' // trim(adjustl(chcfl)) //'.dat'
 
                     open(unit = 100, file=fichier)
  
@@ -131,9 +148,12 @@ module mod_schemas
                     eta = rho_c(i) / (rho_b(i) + rho_c(i))
                     lambda(i) = eta * 0.105_PR + (1.0_PR - eta) * (0.166_PR + 0.369_PR * khi)
 
-                    
+                    Qr(i) = k(1,i) * rho_b(i) * (dH(1) + (Cp(2) - Cp(1)) * (T(i) - Tinit(i*dx, ci))) + &
+                        & k(2,i) * rho_b(i) * (dH(2) + (Cp(3) - Cp(1)) * (T(i) - Tinit(i*dx, ci))) + &
+                        & k(3,i) * rho_l(i) * (dH(3) + (Cp(5) - Cp(4)) * (T(i) - Tinit(i*dx, ci)))
                 end do
 
+                !print *, Qr
 
                 select case (schema)
 
@@ -145,47 +165,54 @@ module mod_schemas
                         T(0) = Tg(tn, cl)
                         Tnew(0) = Tg(tn, cl)
 
-                        T(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
-                        call lu_tridiagonal(imax, A, T(1:imax), Tnew(1:imax))
-                        print *, Tnew(0), Tnew(1)
+                        b = T(1:imax) !+ dt*Qr(1:imax)
+
+                        !La condition de Dirichlet à gauche impose :
+                        b(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2) !+ dt*Qr(1)
+
+                        call lu_tridiagonal(imax, A, b, Tnew(1:imax))
+                        
+                        !La condition de Neumann à droite impose :
                         Tnew(imax+1) = Tnew(imax)
 
                     case (3) !Crank-Nicolson
 
                         T(0) = Tg(tn, cl)
-                        T(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
 
-                        call remplissage_A(A1, imax, lambda, -1._PR, rhoCp, dx, dt)
-                        call remplissage_A(A2, imax, lambda, 1._PR, rhoCp, dx, dt)
-                        call lu_tridiagonal(imax, A1, MATMUL(A2,T(1:imax)), Tnew(1:imax))
+                        call remplissage_A(A1, imax, lambda, -0.5_PR, rhoCp, dx, dt)
+                        call remplissage_A(A2, imax, lambda, 0.5_PR, rhoCp, dx, dt)
 
+                        b = MATMUL(A2, T(1:imax)) !+ dt*Qr(1:imax)
+
+                        !La condition de Dirichlet à gauche impose :
+                        b(1) = b(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2) !+ dt*Qr(1)
+
+                        
+                        call lu_tridiagonal(imax, A1, b, Tnew(1:imax))
+
+                        Tnew(imax+1) = Tnew(imax)
                 end select 
 
                 do i = 0, imax+1
 
-                    call arrhenius(k, T(i))
-                    !print *, k, T(i)
-                    call arrhenius(knew, Tnew(i))
-                    !print *, knew, Tnew(i)
-                    call CK2_step(rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i), k, knew, dt)
-                    if ( mod(ct, freq) == 0) then
-
-                        write(100,*) dx*i, Tnew(i), rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i)
-                    end if
+                    call arrhenius(knew(:,i), Tnew(i))
+                    call CK2_step(rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i), k(:,i), knew(:,i), dt)
+                    if ( mod(ct, freq) == 0) write(100,*) dx*i, Tnew(i), rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i)
                     
                 end do
 
                 T = Tnew
                 tn = tn + dt
+                k = knew
                 ct = ct + 1
+                
+                if ( mod(ct, freq) == 0) close(100)
 
-                if ( mod(ct, freq) == 0) then
-
-                    close(100)
-
-                end if
             end do 
 
+            call cpu_time(t2)
+
+            print *, "Temps d'exécution :", t2-t1
         end subroutine save_temp
 
 end module mod_schemas

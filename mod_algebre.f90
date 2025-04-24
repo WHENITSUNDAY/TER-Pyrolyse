@@ -28,7 +28,7 @@ module mod_algebre
 
                 else if (i == imax) then
 
-                    A(i, i) = 1._PR - alpha * (lambda_mh + lambda_ph) + alpha * lambda_ph
+                    A(i, i) = 1._PR - alpha * lambda_mh 
                     A(i, i-1) = alpha * lambda_mh
 
                 else

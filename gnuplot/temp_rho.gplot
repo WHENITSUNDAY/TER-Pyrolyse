@@ -1,0 +1,60 @@
+reset
+set terminal pngcairo size 1800,1000 font "Helvetica,28" enhanced
+set output
+
+t_values = ""
+do for [i=0:10] {
+    t_values = t_values.sprintf(" %.1f", i)
+}
+do for [i=12:20:2] {
+    t_values = t_values.sprintf(" %.1f", i)
+}
+do for [i=25:50:5] {
+    t_values = t_values.sprintf(" %.1f", i)
+}
+do for [i=60:200:10] {
+    t_values = t_values.sprintf(" %.1f", i)
+}
+
+schema_values = "EE EI CK"
+
+schema = 2
+ci = 1
+cl = 1
+L = 0.2
+imax = 128
+
+# Palette Plasma
+set palette defined (0 "#0d0887", 1 "#46039f", 2 "#7201a8", 3 "#9c179e", 4 "#bd3786", 5 "#d8576b", 6 "#ed7953", 7 "#fb9f3a", 8 "#fdca26", 9 "#f0f921")
+
+set xlabel "x" font "Helvetica Bold,24"
+set ylabel "Valeurs" font "Helvetica Bold,24"
+set grid lw 1.5
+set tics font "Helvetica,18"
+set key outside right spacing  1.2 font "Helvetica,22" box 
+set colorbox
+
+set style line 1 lt 1 lc rgb "#1f77b4" lw 2 pt 6 ps 1.4 # rho_b
+set style line 2 lt 1 lc rgb "#ff7f0e" lw 2 pt 6 ps 1.4 # rho_c
+set style line 3 lt 1 lc rgb "#2ca02c" lw 2 pt 6 ps 1.4 # rho_g
+set style line 4 lt 1 lc rgb "#d62728" lw 2 pt 6 ps 1.4 # rho_l
+set style line 5 lt 1 lc rgb "#9467bd" lw 2 pt 6 ps 1.4 # rho_v
+
+do for [i=1:words(t_values)] {
+    t = word(t_values, i)
+    fichier = sprintf("data/temp_%s_ci1_cl1_L0.2_bois1_tn%s_imax128.dat", word(schema_values, schema), t)
+
+    set title sprintf("Solution Numérique (%s), t = %s", word(schema_values, schema), t)
+
+    set output sprintf("images/img_%03d.png", i)
+
+    plot fichier u 1:2:2 w l palette lw 6 title "T(t,x)", \
+         '' u 1:3 w lp ls 1 title "rho_b", \
+         '' u 1:4 w lp ls 2 title "rho_c", \
+         '' u 1:5 w lp ls 3 title "rho_g", \
+         '' u 1:6 w lp ls 4 title "rho_l", \
+         '' u 1:7 w lp ls 5 title "rho_v"
+}
+
+#convert -delay 20 -loop 0 images/img_*.png temp_rho.gif
+unset output

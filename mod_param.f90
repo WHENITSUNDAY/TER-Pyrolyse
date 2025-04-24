@@ -9,5 +9,6 @@ module mod_param
     real(PR), dimension(3), parameter   :: A_arr = [7.38e5_PR, 1.44e4_PR, 5.13e10_PR] !Paramètres Arrhenius
     real(PR), dimension(3), parameter   :: E_arr = [106.5e3_PR, 88.6e3_PR, 88e3_PR] !Paramètres Arrhenius
     real(PR), dimension(5), parameter   :: Cp = [1.95_PR, 1.39_PR, 2.4_PR, 4.18_PR, 1.58_PR]
+    real(PR), dimension(3), parameter   :: dH = [-420._PR, -420._PR, -2440._PR]
     
 end module mod_param
