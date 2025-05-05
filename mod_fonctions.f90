@@ -12,9 +12,11 @@ module mod_fonctions
             integer :: ci
 
             select case (ci)
-            
-                case (1)
+                
+                case (0)
 
+                    Tinit = 300._PR 
+                case (1)
                     Tinit = 300._PR
 
                 case (2)

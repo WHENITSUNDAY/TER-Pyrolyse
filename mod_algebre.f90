@@ -43,6 +43,40 @@ module mod_algebre
         
         end subroutine remplissage_A
 
+        subroutine lu_tridiagonal(n, A, b, x)
+            implicit none
+            integer, intent(in) :: n
+            real(PR), intent(in) :: A(n, n)
+            real(PR), intent(in) :: b(n)
+            real(PR), intent(out) :: x(n)
+        
+            real(PR), dimension(n) :: d, y
+            real(PR), dimension(n-1) :: l, u
+            integer :: i
+
+            do i = 1, n
+                d(i) = A(i, i)
+            end do
+
+            do i = 1, n - 1
+                u(i) = A(i, i+1)
+                l(i) = A(i+1, i) / d(i)
+                d(i+1) = d(i+1) - l(i) * u(i)
+            end do
+
+            y(1) = b(1)
+            do i = 2, n
+                y(i) = b(i) - l(i-1) * y(i-1)
+            end do
+
+            x(n) = y(n) / d(n)
+            do i = n-1, 1, -1
+                x(i) = (y(i) - u(i) * x(i+1)) / d(i)
+            end do
+
+        end subroutine lu_tridiagonal
+
+
         subroutine print_mat(A)
             
             real(PR), dimension(:,:)    :: A
@@ -144,38 +178,6 @@ module mod_algebre
         
         end subroutine chol_res
 
-        subroutine lu_tridiagonal(n, A, b, x)
-            implicit none
-            integer, intent(in) :: n
-            real(PR), intent(in) :: A(n, n)
-            real(PR), intent(in) :: b(n)
-            real(PR), intent(out) :: x(n)
-        
-            real(PR), dimension(n) :: d, y
-            real(PR), dimension(n-1) :: l, u
-            integer :: i
-
-            do i = 1, n
-                d(i) = A(i, i)
-            end do
-
-            do i = 1, n - 1
-                u(i) = A(i, i+1)
-                l(i) = A(i+1, i) / d(i)
-                d(i+1) = d(i+1) - l(i) * u(i)
-            end do
-
-            y(1) = b(1)
-            do i = 2, n
-                y(i) = b(i) - l(i-1) * y(i-1)
-            end do
-
-            x(n) = y(n) / d(n)
-            do i = n-1, 1, -1
-                x(i) = (y(i) - u(i) * x(i+1)) / d(i)
-            end do
-
-        end subroutine lu_tridiagonal
 
 
 end module mod_algebre

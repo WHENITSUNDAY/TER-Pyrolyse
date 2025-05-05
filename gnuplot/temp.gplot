@@ -38,7 +38,7 @@ do for [i=1:10] {
 
 
 plot for [i=1:words(t_values)] \
-    sprintf("data/temp_%s_ci1_cl1_L0.2_bois1_tn%s_imax128.dat", word(schema_values, schema), word(t_values,i)) \
+    sprintf("data/temp_%s_L0.2_bois1_tn%s_imax128.dat", word(schema_values, schema), word(t_values,i)) \
     u 1:2 w lp ls i title sprintf("u_i(t=%s)", word(t_values,i))
 
 

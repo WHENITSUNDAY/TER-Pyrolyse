@@ -1,6 +1,6 @@
 FC=gfortran
-FFLAGS = -O0 -g -Wall -fcheck=all -ffpe-trap=invalid,zero
-#FFLAGS = -O3 -march=native
+#FFLAGS = -O0 -g -Wall -fcheck=all -ffpe-trap=invalid,zero
+FFLAGS = -O3 -fopenmp -march=native
 
 EXE=run
 
