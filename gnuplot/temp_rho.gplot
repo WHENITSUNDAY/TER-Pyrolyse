@@ -44,7 +44,7 @@ do for [i=1:words(t_values)] {
     t = word(t_values, i)
     fichier = sprintf("data/temp_%s_L0.2_bois1_tn%s_imax128.dat", word(schema_values, schema), t)
 
-    set title sprintf("Solution Numérique (%s), t = %s", word(schema_values, schema), t)
+    set title sprintf("Solution Numérique 1D (%s), t = %s", word(schema_values, schema), t)
 
     set output sprintf("images/1D/img_%03d.png", i)
 

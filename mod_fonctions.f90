@@ -40,7 +40,7 @@ module mod_fonctions
 
                 case (2)
 
-                    Tg = 500._PR
+                    Tg = 1000._PR
                 
                 case (3)
 

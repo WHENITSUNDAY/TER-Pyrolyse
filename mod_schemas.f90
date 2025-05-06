@@ -164,10 +164,11 @@ module mod_schemas
                         T(0) = Tg(tn, cl)
                         Tnew(0) = Tg(tn, cl)
 
-                        b = T(1:imax) !+ dt*Qr(1:imax)/rhoCp(1:imax)
+                        b = T(1:imax) + dt*Qr(1:imax)/rhoCp(1:imax)
 
                         !La condition de Dirichlet à gauche impose :
-                        b(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2) !+ dt*Qr(1)/rhoCp(1)
+                        b(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2) &
+                        + dt*Qr(1)/rhoCp(1)
 
                         call lu_tridiagonal(imax, A, b, Tnew(1:imax))
                         
@@ -283,8 +284,8 @@ module mod_schemas
             end do
 
 
-            T(0,:) = Tg(0._PR, cl)
-            Tnew(0,:) = Tg(0._PR, cl)
+            T(0,nx/4:3*nx/4) = Tg(0._PR, cl)
+            Tnew(0,nx/4:3*nx/4) = Tg(0._PR, cl)
             
             do j = 0, ny+1
                 do i = 0, nx+1
@@ -326,7 +327,8 @@ module mod_schemas
 
                         err = 1._PR
                         Tnew = T
-                        Tnew(0,:) = Tg(tn, cl)
+                        !Tnew(0,:) = Tg(tn, cl)
+                        Tnew(0,nx/4:3*nx/4) = Tg(tn, cl)
                         
                         ite = 0
                         max_ite = 100
@@ -346,8 +348,8 @@ module mod_schemas
 
                                 Tnew(i, j) = (T(i, j) + &
                                         alpha_x * (lambda_ph_x * Tnew(i+1, j) + lambda_mh_x * Tnew(i-1, j)) + &
-                                        alpha_y * (lambda_ph_y * Tnew(i, j+1) + lambda_mh_y * Tnew(i, j-1))) / gamma &
-                                        + dt * Qr(i, j) / rhoCp(i, j)
+                                        alpha_y * (lambda_ph_y * Tnew(i, j+1) + lambda_mh_y * Tnew(i, j-1)) &
+                                        + dt * Qr(i, j) / rhoCp(i, j))/ gamma
 
                                 err = max(err, abs(T(i,j) - Tnew(i,j)))
                                 end do
@@ -360,10 +362,17 @@ module mod_schemas
                             Tnew(i, 0) = Tnew(i, 1)
                         end do
 
-                        do j = 1, ny
+                        do j = 0, ny+1
                             Tnew(nx+1, j) = Tnew(nx, j)
                         end do
 
+                        do j = 0, ny/4-1
+                            Tnew(0, j) = Tnew(1, j)
+                        end do
+
+                        do j = 3*ny/4+1, ny+1 
+                            Tnew(0, j) = Tnew(1, j)
+                        end do
                     case (3) ! Crank-Nicolson
                 end select
 
@@ -545,8 +554,8 @@ module mod_schemas
 
                     Tnew(i, j) = (T(i, j) + &
                         alpha_x * (lambda_ph_x * Tnew(i+1, j) + lambda_mh_x * Tnew(i-1, j)) + &
-                        alpha_y * (lambda_ph_y * Tnew(i, j+1) + lambda_mh_y * Tnew(i, j-1))) / gamma &
-                        + dt * Qr(i, j) / rhoCp(i, j)
+                        alpha_y * (lambda_ph_y * Tnew(i, j+1) + lambda_mh_y * Tnew(i, j-1))  &
+                        + dt * Qr(i, j) / rhoCp(i, j)) / gamma
 
                     err = max(err, abs(T(i,j) - Tnew(i,j)))
                     end do
@@ -559,7 +568,7 @@ module mod_schemas
                     Tnew(i, 0) = Tnew(i, 1)
                 end do
 
-                do j = 1, ny
+                do j = 0, ny+1
                     Tnew(nx+1, j) = Tnew(nx, j)
                 end do
 

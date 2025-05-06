@@ -16,7 +16,7 @@ imax = 128
 set xlabel "x" font "Helvetica Bold,24" offset 0, 0.8
 set ylabel "T(t,x)" font "Helvetica Bold,24" offset 0, 0
 
-set title sprintf("Solution Numérique (%s)", word(schema_values, schema)) font "Helvetica Bold,28" offset 0, -0.5
+set title sprintf("Solution Numérique 1D (%s)", word(schema_values, schema)) font "Helvetica Bold,28" offset 0, -0.5
 
 set grid lw 1.5
 set tics font "Helvetica,18"
