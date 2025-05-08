@@ -599,4 +599,124 @@ module mod_schemas
 
             print *, "2D_2W, Temps d'exécution :", t2-t1
         end subroutine save_temp_2D_2W
+
+
+        subroutine save_vect_temp(schema, T, ci, cl, L, imax, tmax, type_bois, cfl)
+
+            integer, intent(in)             :: imax, type_bois, schema, ci, cl 
+            real(PR), intent(in)            :: cfl, tmax, L
+            real(PR), dimension(0:imax+1)   :: T, Tnew , rho_b, rho_c, rho_g, rho_l, rho_v, rhoCp, lambda, Qr
+            real(PR), dimension(imax, imax) :: A, A1, A2
+            real(PR), dimension(imax)       :: b
+            real(PR), dimension(3, 0:imax+1):: k, knew
+            real(PR)                        :: tn, dt, dx, eta, khi, mv_bois, xi
+            integer                         :: i, ct
+
+            !Initialisation Chimie
+            khi = humidite(type_bois)
+            mv_bois = densite_bois(type_bois)
+            rho_b = mv_bois*(1._PR-khi)
+            rho_c = 0._PR
+            rho_g = 0._PR
+            rho_l = mv_bois*khi
+            rho_v = 0._PR
+
+            
+            !Initialisation Schéma
+            tn = 0._PR
+            ct = 0
+            dx = L/(imax+1)
+            
+            !Calcul dt
+            select case (schema)
+
+                case (2)
+                    dt = cfl/tmax !Schema implicite : pas de condition CFL
+                    
+                case(3)
+                    dt = cfl/tmax
+            
+            end select
+
+            T(0) = Tg(0._PR, cl)
+            Tnew(0) = Tg(0._PR, cl)
+
+            do i = 1, imax+1
+                xi = i*dx
+                T(i) = Tinit(xi, ci)
+                Tnew(i) = Tinit(xi, ci)
+                
+            end do
+
+            
+            do i = 0, imax+1
+                call arrhenius(k(:,i), T(i))
+            end do
+
+            do while (tn < tmax)
+                do i = 0, imax+1
+
+                    rhoCp(i) = rho_b(i)*Cp(1) + rho_c(i)*Cp(2) + rho_g(i)*Cp(3) + rho_l(i)*Cp(4) + rho_v(i)*Cp(5)
+                    eta = rho_c(i) / (rho_b(i) + rho_c(i))
+                    lambda(i) = eta * 0.105_PR + (1.0_PR - eta) * (0.166_PR + 0.369_PR * khi)
+
+                    Qr(i) = k(1,i) * rho_b(i) * (dH(1) + (Cp(2) - Cp(1)) * (T(i) - Tinit(i*dx, ci))) + &
+                        & k(2,i) * rho_b(i) * (dH(2) + (Cp(3) - Cp(1)) * (T(i) - Tinit(i*dx, ci))) + &
+                        & k(3,i) * rho_l(i) * (dH(3) + (Cp(5) - Cp(4)) * (T(i) - Tinit(i*dx, ci)))
+                end do
+
+
+                select case (schema)
+
+                    case (2) !Euler Implicite
+                        
+                        call remplissage_A(A, imax, lambda, -1._PR, rhoCp, dx, dt)
+                        T(0) = Tg(tn, cl)
+                        Tnew(0) = Tg(tn, cl)
+
+                        b = T(1:imax) + dt*Qr(1:imax)/rhoCp(1:imax)
+
+                        !La condition de Dirichlet à gauche impose :
+                        b(1) = T(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2) &
+                        + dt*Qr(1)/rhoCp(1)
+
+                        call lu_tridiagonal(imax, A, b, Tnew(1:imax))
+                        
+                        !La condition de Neumann à droite impose :
+                        Tnew(imax+1) = Tnew(imax)
+
+                    case (3) !Crank-Nicolson
+
+                        T(0) = Tg(tn, cl)
+
+                        call remplissage_A(A1, imax, lambda, -0.5_PR, rhoCp, dx, dt)
+                        call remplissage_A(A2, imax, lambda, 0.5_PR, rhoCp, dx, dt)
+
+                        b = MATMUL(A2, T(1:imax)) + dt*Qr(1:imax)/rhoCp(1:imax)
+
+                        !La condition de Dirichlet à gauche impose :
+                        b(1) = b(1) + T(0)*dt*(2.0_PR * lambda(1) * lambda(0) / (lambda(1) + lambda(0)))/(rhoCp(1)*dx**2)
+
+                        
+                        call lu_tridiagonal(imax, A1, b, Tnew(1:imax))
+
+                        Tnew(imax+1) = Tnew(imax)
+                end select 
+
+                do i = 0, imax+1
+
+                    call arrhenius(knew(:,i), Tnew(i))
+                    call CK2_step(rho_b(i), rho_c(i), rho_g(i), rho_l(i), rho_v(i), k(:,i), knew(:,i), dt)
+                    
+                end do
+
+
+                T = Tnew
+                tn = tn + dt
+                k = knew
+                ct = ct + 1
+
+            end do 
+
+        end subroutine save_vect_temp
 end module mod_schemas

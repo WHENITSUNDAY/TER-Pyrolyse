@@ -1,0 +1,46 @@
+#set terminal pdfcairo font "Helvetica,28" size 24cm,14cm enhanced
+#set output "solution_exacte.pdf"
+
+
+t_values = "0.0 1.0 2.0 3.0 5.0 10.0 15.0 50.0 100.0 200.0"
+schema_values = "EE EI CK"
+
+schema = 2
+ci = 1
+cl = 1
+L = 1
+imax = 128
+
+
+
+set xlabel "x" font "Helvetica Bold,24" offset 0, 0.8
+set ylabel "T(t,x)" font "Helvetica Bold,24" offset 0, 0
+
+set title sprintf("Solution Numérique 1D (%s)", word(schema_values, schema)) font "Helvetica Bold,28" offset 0, -0.5
+
+set grid lw 1.5
+set tics font "Helvetica,18"
+set key right spacing  1.2 font "Helvetica,22" box 
+unset colorbox
+
+#Plasma
+set palette defined (0 "#0d0887", 1 "#46039f", 2 "#7201a8", 3 "#9c179e", 4 "#bd3786", 5 "#d8576b", 6 "#ed7953", 7 "#fb9f3a", 8 "#fdca26", 9 "#f0f921")
+
+a = 3
+b = 1.5
+
+do for [i=1:10] {
+    frac = 0.1*i
+    set style line i lc palette frac frac lw a pt 6 ps b
+}
+
+
+
+
+plot for [i=1:words(t_values)] \
+    sprintf("data/1D/temp_%s_L0.2_bois1_tn%s_imax128.dat", word(schema_values, schema), word(t_values,i)) \
+    u 1:2 w lp ls i title sprintf("u_i(t=%s)", word(t_values,i))
+
+
+
+pause -1

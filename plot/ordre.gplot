@@ -1,0 +1,22 @@
+set key font "Helvetica Bold,18"
+set tics font "Helvetica Bold,14"
+set xlabel "ln({/Symbol D}x)" font "Helvetica Bold,18"
+set ylabel "ln(E)" rotate by 0 font "Helvetica Bold,18"
+
+set key left
+
+set logscale xy 
+set grid lw 1.5
+mc1(x) = a1*x+b1
+fit mc1(x) "data/err/EItemp.dat" using (log($1)):(log($2)) via a1,b1
+
+mc2(x) = a2*x+b2
+fit mc2(x) "data/err/CKtemp.dat" using (log($1)):(log($2)) via a2,b2
+
+plot    "data/err/EItemp.dat" u 1:2 w p lw 3 pt 6 ps 2 lc "red" title "Erreur globale (EI)", \
+        "data/err/CKtemp.dat" u 1:2 w p lw 3 pt 6 ps 2 lc "blue" title "Erreur globale (CK)", \
+        exp(mc1(log(x))) title sprintf("Reg. linéaire d'ordre %.3f", a1) lt 2 dt 2 lw 3 lc "red", \
+        exp(mc2(log(x))) title sprintf("Reg. linéaire d'ordre %.3f", a2) lt 2 dt 2 lw 3 lc "blue"
+
+
+pause -1
