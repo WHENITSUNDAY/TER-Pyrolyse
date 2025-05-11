@@ -1,11 +1,16 @@
-set key font "Helvetica Bold,18"
-set tics font "Helvetica Bold,14"
-set xlabel "ln({/Symbol D}x)" font "Helvetica Bold,18"
-set ylabel "ln(E)" rotate by 0 font "Helvetica Bold,18"
+set terminal wxt size 1400,900
+set key font "Helvetica Bold,20"
+set tics font "Helvetica Bold,18"
+set xlabel "ln({/Symbol D}t)" font "Helvetica Bold,20" offset 0, 0
+set ylabel "ln(E)" rotate by 0 font "Helvetica Bold,20" offset 2, 0
 
-set key left
+set key left box
 
 set logscale xy 
+set format x "10^{%L}"
+set format y "10^{%L}"
+set xtics format "10^{%L}"
+set ytics format "10^{%L}"
 set grid lw 1.5
 mc1(x) = a1*x+b1
 fit mc1(x) "data/err/EItemp.dat" using (log($1)):(log($2)) via a1,b1
